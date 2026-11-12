@@ -1,0 +1,51 @@
+include_guard(GLOBAL)
+
+function(uring_create_libraries)
+  find_package(uarch CONFIG REQUIRED)
+  foreach(layer IN ITEMS error abi sys caps core ring ops resources futex2 io)
+    add_library(uring_${layer} INTERFACE)
+    add_library(uring::${layer} ALIAS uring_${layer})
+    set_target_properties(uring_${layer} PROPERTIES EXPORT_NAME ${layer})
+    target_compile_features(uring_${layer} INTERFACE cxx_std_26)
+    target_include_directories(uring_${layer} INTERFACE
+      "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+      "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
+    target_link_libraries(uring_${layer} INTERFACE uarch::primitives)
+  endforeach()
+  target_link_libraries(uring_abi INTERFACE uring::error)
+  target_link_libraries(uring_sys INTERFACE uring::abi)
+  target_link_libraries(uring_caps INTERFACE uring::sys)
+  target_link_libraries(uring_core INTERFACE uring::caps)
+  target_link_libraries(uring_ring INTERFACE uring::core)
+  target_link_libraries(uring_ops INTERFACE uring::ring)
+  target_link_libraries(uring_resources INTERFACE uring::ring)
+  target_link_libraries(uring_futex2 INTERFACE uring::ring)
+  target_link_libraries(uring_io INTERFACE uring::ops uring::resources uring::core)
+  # io already depends on ops, resources, and core, so those layers cannot link back to it.
+  add_library(uring INTERFACE)
+  add_library(uring::uring ALIAS uring)
+  target_link_libraries(uring INTERFACE
+    uarch::primitives
+    uring::error uring::abi uring::sys uring::caps uring::core uring::ring
+    uring::ops uring::resources uring::futex2 uring::io)
+endfunction()
+
+function(uring_configure_internal target)
+  cmake_parse_arguments(PARSE_ARGV 1 ARG "NO_SANITIZERS" "" "")
+  target_link_libraries(${target} PRIVATE uring::uring)
+  set_target_properties(${target} PROPERTIES CXX_EXTENSIONS OFF)
+  if(NOT COMMAND uarch_configure_runtime)
+    message(FATAL_ERROR "uarch_configure_runtime is required (upgrade uarch)")
+  endif()
+  uarch_configure_runtime(${target})
+  uring_enable_warnings(${target})
+  if(NOT ARG_NO_SANITIZERS)
+    uring_enable_sanitizers(${target})
+  endif()
+endfunction()
+
+function(uring_add_test target)
+  add_executable(${target} ${ARGN})
+  uring_configure_internal(${target})
+  add_test(NAME ${target} COMMAND ${target})
+endfunction()

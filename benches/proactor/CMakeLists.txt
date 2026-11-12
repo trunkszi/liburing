@@ -1,0 +1,2 @@
+add_executable(proactor_dispatch_bench dispatch_bench.cc)
+uring_configure_internal(proactor_dispatch_bench)

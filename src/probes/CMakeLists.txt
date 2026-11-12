@@ -1,0 +1,1 @@
+uring_add_codegen_probes(uring_probes proactor_probes.cc)

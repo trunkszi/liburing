@@ -1,0 +1,6 @@
+uring_add_test(abi_layout_test abi/layout_test.cc)
+uring_add_test(core_layout_test core/layout_test.cc)
+uring_add_test(ring_consteval_test ring/ring_consteval_test.cc)
+uring_add_test(opcode_coverage_test ops/opcode_coverage_test.cc)
+uring_add_test(futex_word_test futex2/word_test.cc)
+uring_add_test(futex_flags_test futex2/flags_test.cc)

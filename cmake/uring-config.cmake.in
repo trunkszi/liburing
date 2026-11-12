@@ -1,0 +1,10 @@
+@PACKAGE_INIT@
+if(NOT DEFINED CMAKE_CXX_SCAN_FOR_MODULES)
+  set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+endif()
+include(CMakeFindDependencyMacro)
+find_dependency(uarch CONFIG REQUIRED)
+include("${CMAKE_CURRENT_LIST_DIR}/UringReflection.cmake")
+uring_detect_reflection()
+include("${CMAKE_CURRENT_LIST_DIR}/uring-targets.cmake")
+check_required_components(uring)

@@ -1,0 +1,2 @@
+add_executable(core_bench operation_bench.cc)
+uring_configure_internal(core_bench)
